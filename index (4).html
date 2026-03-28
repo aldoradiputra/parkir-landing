@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SupaPark — Sistem Parkir Pintar Berbasis AI | Tanpa Tiket, Tanpa Operator</title>
+<meta name="description" content="SupaPark adalah sistem parkir pintar berbasis AI pertama di Indonesia. Tanpa tiket, tanpa operator, tanpa antrian. ALPR otomatis, pembayaran QRIS, offline-first. Mulai dari Rp 45 juta.">
+<meta name="keywords" content="parkir pintar, smart parking, ALPR, ANPR, manless parking, sistem parkir, parkir otomatis, Indonesia">
+<meta property="og:title" content="SupaPark — Sistem Parkir Pintar Berbasis AI">
+<meta property="og:description" content="Tanpa tiket, tanpa operator, tanpa antrian. Sistem parkir AI pertama di Indonesia yang bekerja 100% offline.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://supapark.id">
+<meta property="og:image" content="https://supapark.id/og-image.png">
+<link rel="icon" href="data:image/svg+xml,<svg viewBox='0 0 48 48' xmlns='http://www.w3.org/2000/svg'><rect x='10' y='8' width='10' height='32' rx='3' fill='%23F5A623'/><path d='M20 8h10a10 10 0 0 1 0 20H20' stroke='%23F5A623' stroke-width='8' stroke-linecap='round' fill='none'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--surface-base:#0A0A0A;--surface-raised:#111111;--surface-overlay:#1A1A1A;--surface-elevated:#222222;
+--text-primary:#F5F5F0;--text-secondary:#A3A39A;--text-tertiary:#666660;--text-inverse:#0A0A0A;
+--amber:#F5A623;--amber-bright:#FFB830;--amber-dim:#B57A18;--amber-subtle:#2A1F08;
+--green:#22C55E;--green-subtle:#052E16;--green-text:#4ADE80;
+--red:#EF4444;--red-subtle:#2D0808;--red-text:#FCA5A5;
+--blue:#3B82F6;--blue-subtle:#0C1A3D;
+--border-subtle:rgba(255,255,255,0.06);--border-default:rgba(255,255,255,0.12);
+--font-ui:'Plus Jakarta Sans',system-ui,sans-serif;
+--font-mono:'JetBrains Mono','Courier New',monospace;
+}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+body{font-family:var(--font-ui);background:var(--surface-base);color:var(--text-primary);line-height:1.6;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+img{max-width:100%;display:block}
+
+/* NAV */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,10,10,0.85);backdrop-filter:blur(16px);border-bottom:0.5px solid var(--border-subtle);transition:background .3s}
+.nav-inner{max-width:1200px;margin:0 auto;padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{display:flex;align-items:center;gap:10px}
+.nav-logo svg{width:32px;height:32px}
+.nav-logo span{font-weight:700;font-size:16px;letter-spacing:0.15em;color:var(--text-primary)}
+.nav-links{display:flex;gap:32px;align-items:center}
+.nav-links a{font-size:13px;font-weight:500;color:var(--text-secondary);transition:color .2s;letter-spacing:0.02em}
+.nav-links a:hover{color:var(--text-primary)}
+.nav-cta{background:var(--amber);color:var(--text-inverse);font-size:13px;font-weight:600;padding:8px 20px;border-radius:8px;border:none;cursor:pointer;transition:background .2s}
+.nav-cta:hover{background:var(--amber-bright)}
+.hamburger{display:none;background:none;border:none;cursor:pointer;padding:8px}
+.hamburger span{display:block;width:22px;height:2px;background:var(--text-primary);margin:5px 0;transition:all .3s}
+
+/* MOBILE NAV */
+.mobile-menu{display:none;position:fixed;top:64px;left:0;right:0;bottom:0;background:rgba(10,10,10,0.97);backdrop-filter:blur(20px);z-index:99;padding:32px 24px;flex-direction:column;gap:8px}
+.mobile-menu.active{display:flex}
+.mobile-menu a{font-size:18px;font-weight:500;color:var(--text-secondary);padding:16px 0;border-bottom:0.5px solid var(--border-subtle);transition:color .2s}
+.mobile-menu a:hover{color:var(--text-primary)}
+
+@media(max-width:768px){
+.nav-links{display:none}
+.hamburger{display:block}
+.hamburger.active span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}
+.hamburger.active span:nth-child(2){opacity:0}
+.hamburger.active span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}
+}
+
+/* SECTION BASE */
+section{padding:100px 24px}
+.container{max-width:1200px;margin:0 auto}
+.section-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.15em;color:var(--amber);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.section-label::before{content:'';width:24px;height:1px;background:var(--amber)}
+.section-title{font-size:clamp(28px,4vw,42px);font-weight:800;line-height:1.15;margin-bottom:16px;color:var(--text-primary)}
+.section-sub{font-size:16px;color:var(--text-secondary);max-width:560px;line-height:1.7}
+
+/* REVEAL */
+.reveal{opacity:0;transform:translateY(30px);transition:opacity .6s ease,transform .6s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.reveal-d1{transition-delay:.1s}.reveal-d2{transition-delay:.2s}.reveal-d3{transition-delay:.3s}.reveal-d4{transition-delay:.4s}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;align-items:center;padding-top:120px;padding-bottom:80px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 40%,rgba(245,166,35,0.06),transparent 70%)}
+.hero-grid{position:absolute;inset:0;background-image:radial-gradient(circle,rgba(255,255,255,0.03) 1px,transparent 1px);background-size:32px 32px;mask-image:radial-gradient(ellipse 70% 50% at 50% 50%,black,transparent)}
+.hero .container{position:relative;z-index:1}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:var(--amber-subtle);border:0.5px solid rgba(245,166,35,0.2);border-radius:100px;padding:6px 16px 6px 8px;margin-bottom:32px}
+.hero-badge .dot{width:8px;height:8px;border-radius:50%;background:var(--amber);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.hero-badge span{font-size:12px;font-weight:600;color:var(--amber);letter-spacing:0.04em}
+.hero h1{font-size:clamp(36px,6vw,72px);font-weight:800;line-height:1.05;margin-bottom:24px;max-width:800px}
+.hero h1 .amber{color:var(--amber)}
+.hero p{font-size:clamp(16px,2vw,20px);color:var(--text-secondary);max-width:560px;margin-bottom:40px;line-height:1.7}
+.hero-ctas{display:flex;gap:16px;flex-wrap:wrap}
+.btn-primary{display:inline-flex;align-items:center;gap:8px;background:var(--amber);color:var(--text-inverse);font-family:var(--font-ui);font-size:15px;font-weight:600;padding:14px 28px;border-radius:10px;border:none;cursor:pointer;transition:all .2s}
+.btn-primary:hover{background:var(--amber-bright);transform:translateY(-1px)}
+.btn-secondary{display:inline-flex;align-items:center;gap:8px;background:transparent;color:var(--text-primary);font-family:var(--font-ui);font-size:15px;font-weight:500;padding:14px 28px;border-radius:10px;border:0.5px solid var(--border-default);cursor:pointer;transition:all .2s}
+.btn-secondary:hover{border-color:var(--text-tertiary);background:var(--surface-elevated)}
+.hero-stats{display:flex;gap:48px;margin-top:64px;padding-top:32px;border-top:0.5px solid var(--border-subtle)}
+.hero-stat .num{font-family:var(--font-mono);font-size:28px;font-weight:700;color:var(--amber)}
+.hero-stat .label{font-size:12px;color:var(--text-tertiary);margin-top:4px;text-transform:uppercase;letter-spacing:0.08em}
+
+/* PAIN POINTS */
+.pain{background:var(--surface-base)}
+.pain-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;margin-top:48px}
+.pain-card{background:var(--surface-raised);border:0.5px solid var(--border-subtle);border-radius:12px;padding:28px 24px;transition:all .3s;position:relative;overflow:hidden}
+.pain-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--red);opacity:0;transition:opacity .3s}
+.pain-card:hover{border-color:var(--border-default);transform:translateY(-2px)}
+.pain-card:hover::before{opacity:1}
+.pain-icon{width:48px;height:48px;border-radius:10px;background:var(--red-subtle);display:flex;align-items:center;justify-content:center;margin-bottom:20px}
+.pain-icon svg{width:24px;height:24px;stroke:var(--red-text);fill:none;stroke-width:1.5}
+.pain-card h3{font-size:16px;font-weight:700;margin-bottom:8px;color:var(--text-primary)}
+.pain-card p{font-size:14px;color:var(--text-secondary);line-height:1.6}
+.pain-stat{font-family:var(--font-mono);font-size:24px;font-weight:700;color:var(--red-text);margin-top:16px}
+.pain-stat-label{font-size:11px;color:var(--text-tertiary);margin-top:2px}
+
+/* FEATURES */
+.features{background:var(--surface-base);position:relative}
+.features::before{content:'';position:absolute;left:0;right:0;top:0;height:1px;background:linear-gradient(90deg,transparent,var(--border-subtle),transparent)}
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-top:48px}
+.feat-card{background:var(--surface-raised);border:0.5px solid var(--border-subtle);border-radius:12px;padding:28px 24px;transition:all .3s}
+.feat-card:hover{border-color:rgba(245,166,35,0.2);background:var(--surface-overlay)}
+.feat-icon{width:44px;height:44px;border-radius:10px;background:var(--amber-subtle);display:flex;align-items:center;justify-content:center;margin-bottom:20px}
+.feat-icon svg{width:22px;height:22px;stroke:var(--amber);fill:none;stroke-width:1.5}
+.feat-card h3{font-size:15px;font-weight:700;margin-bottom:8px}
+.feat-card p{font-size:13px;color:var(--text-secondary);line-height:1.65}
+
+/* HOW IT WORKS */
+.how{background:var(--surface-base)}
+.flow-tabs{display:flex;gap:8px;margin-top:48px;margin-bottom:32px;flex-wrap:wrap}
+.flow-tab{font-family:var(--font-ui);font-size:13px;font-weight:600;padding:10px 20px;border-radius:8px;background:var(--surface-raised);border:0.5px solid var(--border-subtle);color:var(--text-secondary);cursor:pointer;transition:all .2s}
+.flow-tab.active{background:var(--amber-subtle);border-color:rgba(245,166,35,0.3);color:var(--amber)}
+.flow-content{display:none}
+.flow-content.active{display:block}
+.flow-steps{display:flex;flex-direction:column;gap:0}
+.flow-step{display:flex;gap:20px;padding:20px 0;position:relative}
+.flow-step:not(:last-child)::after{content:'';position:absolute;left:19px;top:60px;bottom:0;width:1px;background:var(--border-subtle)}
+.flow-num{width:40px;height:40px;border-radius:10px;background:var(--amber-subtle);border:0.5px solid rgba(245,166,35,0.2);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:14px;font-weight:700;color:var(--amber);flex-shrink:0;position:relative;z-index:1}
+.flow-step h4{font-size:15px;font-weight:600;margin-bottom:4px}
+.flow-step p{font-size:13px;color:var(--text-secondary);line-height:1.6}
+.flow-step .tag{display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:100px;margin-top:8px}
+.tag-green{background:var(--green-subtle);color:var(--green-text)}
+.tag-amber{background:var(--amber-subtle);color:var(--amber)}
+.tag-blue{background:var(--blue-subtle);color:#93C5FD}
+
+/* ARCHITECTURE */
+.arch-box{background:var(--surface-raised);border:0.5px solid var(--border-subtle);border-radius:12px;padding:32px;margin-top:32px}
+.arch-title{font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-secondary);margin-bottom:24px}
+.arch-layers{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.arch-layer{background:var(--surface-base);border:0.5px solid var(--border-subtle);border-radius:10px;padding:20px}
+.arch-layer h4{font-size:13px;font-weight:700;color:var(--amber);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.arch-layer h4 svg{width:16px;height:16px;stroke:var(--amber);fill:none;stroke-width:1.5}
+.arch-layer ul{list-style:none;display:flex;flex-direction:column;gap:6px}
+.arch-layer li{font-size:12px;color:var(--text-secondary);padding-left:16px;position:relative;font-family:var(--font-mono)}
+.arch-layer li::before{content:'›';position:absolute;left:0;color:var(--text-tertiary)}
+
+/* COMPARISON TABLE */
+.compare{background:var(--surface-base)}
+.compare-table{width:100%;border-collapse:collapse;margin-top:48px;border-radius:12px;overflow:hidden;border:0.5px solid var(--border-subtle)}
+.compare-table th,.compare-table td{padding:16px 20px;text-align:left;font-size:14px;border-bottom:0.5px solid var(--border-subtle)}
+.compare-table thead th{background:var(--surface-raised);font-weight:600;font-size:13px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.06em}
+.compare-table thead th:first-child{color:var(--text-tertiary)}
+.compare-table thead th:nth-child(2){color:var(--red-text)}
+.compare-table thead th:nth-child(3){color:var(--amber)}
+.compare-table tbody td{background:var(--surface-base);color:var(--text-secondary)}
+.compare-table tbody td:first-child{font-weight:500;color:var(--text-primary);font-size:13px}
+.compare-table tbody td:nth-child(2){color:var(--text-tertiary)}
+.compare-table tbody td:nth-child(3){color:var(--amber);font-weight:600}
+.compare-table tbody tr:hover td{background:var(--surface-elevated)}
+.compare-table .mono{font-family:var(--font-mono);font-size:13px}
+@media(max-width:640px){
+.compare-table{font-size:12px}
+.compare-table th,.compare-table td{padding:12px 10px}
+}
+
+/* PRICING */
+.pricing{background:var(--surface-base)}
+.pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;margin-top:48px}
+.price-card{background:var(--surface-raised);border:0.5px solid var(--border-subtle);border-radius:12px;padding:32px 28px;transition:all .3s;position:relative}
+.price-card.featured{border-color:rgba(245,166,35,0.3)}
+.price-card.featured::before{content:'POPULER';position:absolute;top:-1px;right:24px;background:var(--amber);color:var(--text-inverse);font-size:10px;font-weight:700;padding:4px 12px;border-radius:0 0 6px 6px;letter-spacing:0.1em}
+.price-card:hover{border-color:var(--border-default);transform:translateY(-2px)}
+.price-name{font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-secondary);margin-bottom:12px}
+.price-amount{font-family:var(--font-mono);font-size:32px;font-weight:700;color:var(--amber);margin-bottom:4px}
+.price-amount .small{font-size:16px;color:var(--text-tertiary);font-weight:500}
+.price-desc{font-size:13px;color:var(--text-tertiary);margin-bottom:24px}
+.price-list{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:28px}
+.price-list li{font-size:13px;color:var(--text-secondary);display:flex;align-items:flex-start;gap:10px}
+.price-list li::before{content:'✓';color:var(--green-text);font-weight:700;flex-shrink:0;margin-top:1px}
+.price-card .btn-primary,.price-card .btn-secondary{width:100%;justify-content:center;font-size:14px;padding:12px}
+.price-note{text-align:center;margin-top:24px;font-size:13px;color:var(--text-tertiary)}
+
+/* MAP */
+.coverage{background:var(--surface-base)}
+.map-wrap{margin-top:48px;display:flex;flex-direction:column;align-items:center}
+.map-svg{max-width:800px;width:100%}
+.city-dots{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;margin-top:32px}
+.city-dot{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-secondary);font-weight:500}
+.city-dot .cdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.coverage-cta{text-align:center;margin-top:40px;font-size:15px;color:var(--text-secondary);max-width:520px}
+
+/* HARDWARE */
+.hardware{background:var(--surface-base)}
+.hw-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;margin-top:48px}
+.hw-card{background:var(--surface-raised);border:0.5px solid var(--border-subtle);border-radius:12px;padding:32px 28px;transition:all .3s}
+.hw-card:hover{border-color:var(--border-default)}
+.hw-badge{display:inline-block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;padding:4px 12px;border-radius:100px;margin-bottom:20px}
+.hw-card:first-child .hw-badge{background:var(--amber-subtle);color:var(--amber)}
+.hw-card:last-child .hw-badge{background:var(--green-subtle);color:var(--green-text)}
+.hw-card h3{font-size:18px;font-weight:700;margin-bottom:8px}
+.hw-card p{font-size:14px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px}
+.hw-list{list-style:none;display:flex;flex-direction:column;gap:8px}
+.hw-list li{font-size:13px;color:var(--text-secondary);padding-left:16px;position:relative}
+.hw-list li::before{content:'→';position:absolute;left:0;color:var(--text-tertiary)}
+
+/* TESTIMONIALS */
+.testi{background:var(--surface-base)}
+.testi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-top:48px}
+.testi-card{background:var(--surface-raised);border:0.5px solid var(--border-subtle);border-radius:12px;padding:28px 24px}
+.testi-stars{color:var(--amber);font-size:14px;letter-spacing:2px;margin-bottom:16px}
+.testi-quote{font-size:14px;color:var(--text-secondary);line-height:1.7;margin-bottom:20px;font-style:italic}
+.testi-author{font-size:13px;font-weight:600;color:var(--text-primary)}
+.testi-role{font-size:12px;color:var(--text-tertiary);margin-top:2px}
+
+/* FAQ */
+.faq{background:var(--surface-base)}
+.faq-list{max-width:720px;margin:48px auto 0;display:flex;flex-direction:column;gap:0}
+.faq-item{border-bottom:0.5px solid var(--border-subtle)}
+.faq-q{width:100%;background:none;border:none;font-family:var(--font-ui);font-size:15px;font-weight:600;color:var(--text-primary);padding:20px 0;cursor:pointer;display:flex;justify-content:space-between;align-items:center;text-align:left}
+.faq-q::after{content:'+';font-size:20px;color:var(--text-tertiary);transition:transform .2s;flex-shrink:0;margin-left:16px}
+.faq-item.open .faq-q::after{content:'−';color:var(--amber)}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .3s ease}
+.faq-item.open .faq-a{max-height:200px}
+.faq-a p{font-size:14px;color:var(--text-secondary);line-height:1.7;padding-bottom:20px}
+
+/* LEGAL */
+.legal{background:#080808;border-top:0.5px solid var(--border-subtle)}
+.legal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;margin-top:48px}
+.legal-card{background:var(--surface-raised);border:0.5px solid var(--border-subtle);border-radius:12px;padding:24px}
+.legal-card h3{font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.legal-card h3 svg{width:16px;height:16px;stroke:var(--text-secondary);fill:none;stroke-width:1.5}
+.legal-card p,.legal-card li{font-size:12px;color:var(--text-tertiary);line-height:1.7}
+.legal-card ul{list-style:none;display:flex;flex-direction:column;gap:6px}
+.legal-card li{padding-left:12px;position:relative}
+.legal-card li::before{content:'•';position:absolute;left:0;color:var(--text-tertiary)}
+
+/* CTA */
+.cta-section{background:var(--surface-base);position:relative}
+.cta-section::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 80%,rgba(245,166,35,0.05),transparent)}
+.cta-inner{text-align:center;max-width:600px;margin:0 auto}
+.cta-form{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:40px;text-align:left}
+.cta-form .full{grid-column:1/-1}
+.cta-form label{font-size:12px;font-weight:500;color:var(--text-tertiary);margin-bottom:4px;display:block}
+.cta-form input,.cta-form textarea,.cta-form select{width:100%;background:var(--surface-raised);border:0.5px solid var(--border-subtle);border-radius:8px;padding:12px 14px;font-family:var(--font-ui);font-size:14px;color:var(--text-primary);outline:none;transition:border-color .2s}
+.cta-form input:focus,.cta-form textarea:focus,.cta-form select:focus{border-color:var(--amber)}
+.cta-form textarea{resize:vertical;min-height:80px}
+.cta-form select{appearance:none;cursor:pointer}
+.cta-form option{background:var(--surface-overlay);color:var(--text-primary)}
+.cta-form .btn-primary{grid-column:1/-1;justify-content:center;padding:14px;font-size:15px;margin-top:4px}
+.cta-wa{margin-top:24px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;color:var(--text-secondary)}
+.cta-wa a{color:#25D366;font-weight:600}
+
+@media(max-width:640px){
+.cta-form{grid-template-columns:1fr}
+.cta-form .full{grid-column:1}
+}
+
+/* FOOTER */
+footer{background:#080808;border-top:0.5px solid var(--border-subtle);padding:48px 24px 32px}
+.footer-inner{max-width:1200px;margin:0 auto}
+.footer-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:40px}
+.footer-brand p{font-size:13px;color:var(--text-tertiary);margin-top:12px;max-width:240px;line-height:1.6}
+.footer-col h4{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-tertiary);margin-bottom:16px}
+.footer-col a{display:block;font-size:13px;color:var(--text-secondary);padding:4px 0;transition:color .2s}
+.footer-col a:hover{color:var(--text-primary)}
+.footer-bottom{display:flex;justify-content:space-between;align-items:center;padding-top:24px;border-top:0.5px solid var(--border-subtle);flex-wrap:wrap;gap:12px}
+.footer-bottom p{font-size:12px;color:var(--text-tertiary)}
+@media(max-width:768px){
+.footer-top{grid-template-columns:1fr 1fr;gap:32px}
+.hero-stats{gap:24px;flex-wrap:wrap}
+}
+@media(max-width:480px){
+.footer-top{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav" id="nav">
+<div class="nav-inner">
+<a href="#" class="nav-logo">
+<svg viewBox="0 0 48 48" fill="none"><rect x="10" y="8" width="10" height="32" rx="3" fill="#F5A623"/><path d="M20 8h10a10 10 0 0 1 0 20H20" stroke="#F5A623" stroke-width="8" stroke-linecap="round" fill="none"/></svg>
+<span>SUPAPARK</span>
+</a>
+<div class="nav-links">
+<a href="#masalah">Masalah</a>
+<a href="#solusi">Solusi</a>
+<a href="#cara-kerja">Cara Kerja</a>
+<a href="#harga">Harga</a>
+<a href="#faq">FAQ</a>
+<a href="#kontak" class="nav-cta">Hubungi Kami</a>
+</div>
+<button class="hamburger" id="hamburger" aria-label="Menu">
+<span></span><span></span><span></span>
+</button>
+</div>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+<a href="#masalah" onclick="closeMenu()">Masalah</a>
+<a href="#solusi" onclick="closeMenu()">Solusi</a>
+<a href="#cara-kerja" onclick="closeMenu()">Cara Kerja</a>
+<a href="#harga" onclick="closeMenu()">Harga</a>
+<a href="#faq" onclick="closeMenu()">FAQ</a>
+<a href="#kontak" onclick="closeMenu()">Hubungi Kami</a>
+</div>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+<div class="hero-grid"></div>
+<div class="container">
+<div class="hero-badge reveal"><span class="dot"></span><span>Sistem Parkir AI — Buatan Indonesia</span></div>
+<h1 class="reveal reveal-d1">Parkir Tanpa Tiket,<br>Tanpa Antrian,<br><span class="amber">Tanpa Ribet.</span></h1>
+<p class="reveal reveal-d2">Sistem parkir AI pertama di Indonesia — palang terbuka otomatis, bayar full QRIS dari e-wallet favorit, link plat nomor ke HP Anda via PWA. Tanpa tiket, tanpa kartu, tanpa operator. Bahkan saat internet mati.</p>
+<div class="hero-ctas reveal reveal-d3">
+<a href="#cara-kerja" class="btn-primary">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+Lihat Demo
+</a>
+<a href="#kontak" class="btn-secondary">Hubungi Kami</a>
+</div>
+<div class="hero-stats reveal reveal-d4">
+<div class="hero-stat"><div class="num">< 2 dtk</div><div class="label">Baca Plat</div></div>
+<div class="hero-stat"><div class="num">100%</div><div class="label">Offline Ready</div></div>
+<div class="hero-stat"><div class="num">90%</div><div class="label">Hemat Biaya</div></div>
+<div class="hero-stat"><div class="num">0</div><div class="label">Operator</div></div>
+</div>
+</div>
+</section>
+
+<!-- PAIN POINTS -->
+<section class="pain" id="masalah">
+<div class="container">
+<div class="section-label reveal">Masalah</div>
+<h2 class="section-title reveal">Parkir di Indonesia<br>Masih Zaman Batu.</h2>
+<p class="section-sub reveal">Dari Secure Parking sampai ISS — sistem parkir konvensional mahal, rawan kecurangan, dan ribet. Tiket kertas, kartu e-money yang harus di-tap manual, antrian panjang. Saatnya berubah total.</p>
+<div class="pain-grid">
+
+<div class="pain-card reveal">
+<div class="pain-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg></div>
+<h3>Tiket & Kartu = Ribet</h3>
+<p>Tiket kertas hilang, kartu e-money (Flazz, e-money Mandiri) harus di-tap manual, saldo kurang harus isi ulang dulu. Semua ini seharusnya tidak perlu ada — plat nomor Anda sudah cukup.</p>
+<div class="pain-stat">73%</div>
+<div class="pain-stat-label">pengunjung frustrasi dengan sistem tiket & kartu</div>
+</div>
+
+<div class="pain-card reveal reveal-d1">
+<div class="pain-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+<h3>Antrian Mengular di Exit</h3>
+<p>Bayar cash, cari uang kecil, tap kartu e-money saldo kurang, isi ulang dulu — rata-rata 2-3 menit per kendaraan. Padahal harusnya palang bisa terbuka otomatis tanpa proses manual apapun.</p>
+<div class="pain-stat">45 dtk</div>
+<div class="pain-stat-label">waktu transaksi ideal — kenyataan 3× lebih lama</div>
+</div>
+
+<div class="pain-card reveal reveal-d2">
+<div class="pain-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+<h3>Tidak Transparan</h3>
+<p>Operator bisa markup tarif, uang cash tidak tercatat penuh, owner tidak tahu pendapatan real. Kebocoran sampai 30%.</p>
+<div class="pain-stat">30%</div>
+<div class="pain-stat-label">estimasi kebocoran pendapatan rata-rata</div>
+</div>
+
+<div class="pain-card reveal reveal-d3">
+<div class="pain-icon"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 7V5a4 4 0 0 0-8 0v2"/></svg></div>
+<h3>Vendor Lock-in Mahal</h3>
+<p>Provider seperti Secure Parking, ISS, dan CentrePark pasang harga Rp 300-500 juta per lokasi. Hardware proprietary, kontrak panjang, spare part impor. Anda jadi sandera vendor.</p>
+<div class="pain-stat mono">500jt+</div>
+<div class="pain-stat-label">biaya instalasi provider konvensional</div>
+</div>
+
+</div>
+</div>
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="solusi">
+<div class="container">
+<div class="section-label reveal">Solusi</div>
+<h2 class="section-title reveal">Satu Sistem.<br>Semua Teratasi.</h2>
+<p class="section-sub reveal">SupaPark menggantikan seluruh infrastruktur parkir konvensional dengan teknologi AI yang terjangkau, transparan, dan bisa jalan tanpa operator.</p>
+<div class="feat-grid">
+
+<div class="feat-card reveal">
+<div class="feat-icon"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M2 12h3M19 12h3M12 2v3M12 19v3"/></svg></div>
+<h3>ALPR Otomatis</h3>
+<p>Kamera AI baca plat nomor dalam 0.5-2 detik. Masuk dan keluar tanpa tiket, tanpa kartu. Plat Anda = identitas Anda.</p>
+</div>
+
+<div class="feat-card reveal reveal-d1">
+<div class="feat-icon"><svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>
+<h3>Full QRIS — Standar Nasional Terbaik</h3>
+<p>Bayar prepaid via PWA sebelum ke exit, atau scan QRIS / tap NFC QRIS di layar exit. Semua e-wallet: GoPay, OVO, Dana, ShopeePay, LinkAja. Satu standar, tanpa ribet kartu e-money.</p>
+</div>
+
+<div class="feat-card reveal reveal-d2">
+<div class="feat-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" y1="11" x2="23" y2="11"/></svg></div>
+<h3>Tanpa Operator</h3>
+<p>Palang buka otomatis, pembayaran digital, notifikasi real-time. Hemat Rp 5-10 juta/bulan biaya operator per shift.</p>
+</div>
+
+<div class="feat-card reveal reveal-d3">
+<div class="feat-icon"><svg viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg></div>
+<h3>Offline-First</h3>
+<p>Internet mati? Sistem tetap jalan. Data tersimpan lokal, palang tetap buka, tagihan dikirim saat online. Zero downtime.</p>
+</div>
+
+<div class="feat-card reveal">
+<div class="feat-icon"><svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>
+<h3>Link Plat ke HP — Next Gen Parking</h3>
+<p>Scan QR di area parkir → link plat nomor ke nomor HP via PWA → terima notifikasi masuk/keluar → prepay sebelum ke exit. Parkir generasi berikutnya, langsung dari browser.</p>
+</div>
+
+<div class="feat-card reveal reveal-d1">
+<div class="feat-icon"><svg viewBox="0 0 24 24"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg></div>
+<h3>Dashboard Real-time</h3>
+<p>Monitor semua lokasi, pendapatan, okupansi dari satu dashboard. Bilingual EN/ID. Akses dari HP, tablet, atau laptop.</p>
+</div>
+
+<div class="feat-card reveal reveal-d2">
+<div class="feat-icon"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg></div>
+<h3>Member Tanpa Kartu</h3>
+<p>Daftar sekali pakai plat nomor, berlaku di semua lokasi SupaPark. Tanpa kartu fisik, tanpa biaya cetak.</p>
+</div>
+
+<div class="feat-card reveal reveal-d3">
+<div class="feat-icon"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M4 16l4.586-4.586a2 2 0 0 1 2.828 0L16 16"/></svg></div>
+<h3>Hardware Fleksibel</h3>
+<p>Pakai palang & kamera existing ATAU kit baru dari kami. Tidak ada vendor lock-in. Komponen tersedia di Tokopedia.</p>
+</div>
+
+</div>
+</div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="cara-kerja">
+<div class="container">
+<div class="section-label reveal">Cara Kerja</div>
+<h2 class="section-title reveal">Simpel untuk Pengguna.<br>Canggih di Balik Layar.</h2>
+
+<div class="flow-tabs reveal">
+<button class="flow-tab active" onclick="showFlow('masuk')">Flow Masuk</button>
+<button class="flow-tab" onclick="showFlow('keluar')">Flow Keluar</button>
+<button class="flow-tab" onclick="showFlow('offline')">Flow Offline</button>
+</div>
+
+<div class="flow-content active" id="flow-masuk">
+<div class="flow-steps">
+<div class="flow-step reveal">
+<div class="flow-num">1</div>
+<div><h4>Kendaraan Tiba di Jalur Masuk</h4><p>Sensor IR mendeteksi kendaraan dan mengklasifikasikan: mobil atau motor. Kamera ALPR langsung aktif.</p></div>
+</div>
+<div class="flow-step reveal reveal-d1">
+<div class="flow-num">2</div>
+<div><h4>AI Baca Plat Nomor</h4><p>YOLOv8 mendeteksi area plat, EasyOCR membaca karakter. Koreksi otomatis untuk plat Indonesia (O→0, I→1, dll). Akurasi 95%+.</p><span class="tag tag-amber">0.5 – 2 detik</span></div>
+</div>
+<div class="flow-step reveal reveal-d2">
+<div class="flow-num">3</div>
+<div><h4>Sesi Parkir Dibuat, Palang Terbuka</h4><p>Sistem mencatat plat, waktu masuk, tipe kendaraan. Palang otomatis terbuka. Jika member — langsung masuk tanpa delay.</p><span class="tag tag-green">Palang terbuka otomatis</span></div>
+</div>
+<div class="flow-step reveal reveal-d3">
+<div class="flow-num">4</div>
+<div><h4>Notifikasi ke HP (Opsional)</h4><p>Jika plat sudah terhubung ke nomor HP, sistem kirim notifikasi: "Anda telah masuk di [Lokasi] pukul [Jam]".</p></div>
+</div>
+</div>
+</div>
+
+<div class="flow-content" id="flow-keluar">
+<div class="flow-steps">
+<div class="flow-step reveal">
+<div class="flow-num">1</div>
+<div><h4>Kamera Baca Plat di Jalur Keluar</h4><p>Sistem mencocokkan plat dengan sesi aktif. Tarif dihitung otomatis berdasarkan durasi dan tipe kendaraan.</p></div>
+</div>
+<div class="flow-step reveal reveal-d1">
+<div class="flow-num">2</div>
+<div><h4>Cek Status: Member? Prepaid?</h4><p>Member aktif atau sudah prepay via PWA → palang langsung terbuka, tanpa layar pembayaran.</p><span class="tag tag-green">Gratis untuk member</span></div>
+</div>
+<div class="flow-step reveal reveal-d2">
+<div class="flow-num">3</div>
+<div><h4>QR QRIS Muncul di Layar</h4><p>Belum bayar? QR QRIS tampil dalam &lt;1 detik di layar exit + notifikasi ke HP. Scan dengan e-wallet favorit.</p><span class="tag tag-amber">Scan & bayar &lt; 30 detik</span></div>
+</div>
+<div class="flow-step reveal reveal-d3">
+<div class="flow-num">4</div>
+<div><h4>Pembayaran Dikonfirmasi, Palang Terbuka</h4><p>Webhook Midtrans mengkonfirmasi pembayaran. Palang terbuka otomatis. Struk WhatsApp terkirim. Selesai.</p><span class="tag tag-green">✓ Transaksi tercatat</span></div>
+</div>
+</div>
+</div>
+
+<div class="flow-content" id="flow-offline">
+<div class="flow-steps">
+<div class="flow-step reveal">
+<div class="flow-num">1</div>
+<div><h4>Internet Mati? Sistem Tetap Jalan</h4><p>Edge device (Raspberry Pi) menyimpan semua data lokal. ALPR, kontrol palang, dan kalkulasi tarif tetap berfungsi 100%.</p><span class="tag tag-blue">Offline-first architecture</span></div>
+</div>
+<div class="flow-step reveal reveal-d1">
+<div class="flow-num">2</div>
+<div><h4>Kendaraan Keluar, Tarif Dihitung Lokal</h4><p>Tarif dikalkulasi dari data lokal. Palang terbuka dalam 3 detik. Pengalaman pengguna sama seperti saat online.</p></div>
+</div>
+<div class="flow-step reveal reveal-d2">
+<div class="flow-num">3</div>
+<div><h4>Tagihan Dikirim Saat Online</h4><p>Begitu internet kembali, semua data tersinkronisasi otomatis. Tagihan dan notifikasi terkirim ke pengguna.</p><span class="tag tag-green">Auto-sync saat online</span></div>
+</div>
+</div>
+</div>
+
+<!-- Architecture -->
+<div class="arch-box reveal" style="margin-top:48px">
+<div class="arch-title">Arsitektur Sistem</div>
+<div class="arch-layers">
+<div class="arch-layer">
+<h4><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg> Edge Device</h4>
+<ul>
+<li>Raspberry Pi 4/5 per jalur</li>
+<li>ALPR engine (YOLOv8 + EasyOCR)</li>
+<li>Kontrol palang via GPIO relay</li>
+<li>SQLite penyimpanan lokal</li>
+<li>PWA embedded (no server)</li>
+</ul>
+</div>
+<div class="arch-layer">
+<h4><svg viewBox="0 0 24 24"><path d="M18 10h-4V4a2 2 0 0 0-4 0v6H6a2 2 0 0 0 0 4h4v6a2 2 0 0 0 4 0v-6h4a2 2 0 0 0 0-4z"/></svg> Cloud Server</h4>
+<ul>
+<li>PostgreSQL database</li>
+<li>REST API + WebSocket</li>
+<li>Midtrans payment gateway</li>
+<li>WhatsApp via Fonnte</li>
+<li>Multi-tenant dashboard</li>
+</ul>
+</div>
+<div class="arch-layer">
+<h4><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg> Interfaces</h4>
+<ul>
+<li>Dashboard operator (Next.js)</li>
+<li>Layar booth touchscreen</li>
+<li>Tablet petugas</li>
+<li>PWA pengunjung</li>
+<li>WhatsApp notifikasi</li>
+</ul>
+</div>
+</div>
+</div>
+
+</div>
+</section>
+
+<!-- COMPARISON -->
+<section class="compare" id="perbandingan">
+<div class="container">
+<div class="section-label reveal">Perbandingan</div>
+<h2 class="section-title reveal">SupaPark vs<br>Provider Konvensional.</h2>
+<p class="section-sub reveal">Angka tidak berbohong. Bandingkan sendiri.</p>
+
+<div class="reveal" style="overflow-x:auto">
+<table class="compare-table">
+<thead>
+<tr><th></th><th>Provider Konvensional</th><th>SupaPark</th></tr>
+</thead>
+<tbody>
+<tr><td>Biaya instalasi (2 jalur)</td><td class="mono">Rp 300–500 juta</td><td class="mono">Rp 45–75 juta</td></tr>
+<tr><td>Biaya bulanan</td><td class="mono">Rp 5–15 juta/bln</td><td class="mono">Rp 2–3 juta/bln</td></tr>
+<tr><td>Operator per shift</td><td>2–3 orang × Rp 3–4 juta</td><td>0 operator</td></tr>
+<tr><td>Tiket / kartu</td><td class="mono">Rp 500–1.500/tiket</td><td>Rp 0 (tanpa tiket)</td></tr>
+<tr><td>Waktu instalasi</td><td>2–4 minggu</td><td>1–3 hari</td></tr>
+<tr><td>Hardware existing?</td><td>Tidak (vendor lock-in)</td><td>Ya, kompatibel</td></tr>
+<tr><td>Offline capability</td><td>Tidak</td><td>Ya, penuh</td></tr>
+<tr><td>Transparansi pendapatan</td><td>Terbatas</td><td>Real-time dashboard</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="harga">
+<div class="container">
+<div class="section-label reveal">Harga</div>
+<h2 class="section-title reveal">Investasi Sekali,<br>Hemat Bertahun-tahun.</h2>
+<p class="section-sub reveal">Semua paket termasuk software, instalasi, dan dukungan teknis. Tanpa biaya tersembunyi.</p>
+
+<div class="pricing-grid">
+
+<div class="price-card reveal">
+<div class="price-name">Starter</div>
+<div class="price-amount">Rp 45<span class="small"> juta</span></div>
+<div class="price-desc">Untuk lokasi kecil — ruko, klinik, gedung kecil</div>
+<ul class="price-list">
+<li>1 jalur masuk + 1 jalur keluar</li>
+<li>2× Raspberry Pi + 2× kamera ALPR</li>
+<li>1× layar exit 10"</li>
+<li>Setup & konfigurasi lengkap</li>
+<li>Bisa pakai palang existing</li>
+<li>Cloud hosting 1 tahun</li>
+<li>Support via WhatsApp</li>
+</ul>
+<a href="#kontak" class="btn-secondary">Pilih Starter</a>
+</div>
+
+<div class="price-card featured reveal reveal-d1">
+<div class="price-name">Business</div>
+<div class="price-amount">Rp 75<span class="small"> juta</span></div>
+<div class="price-desc">Untuk lokasi menengah — mall, RS, apartemen</div>
+<ul class="price-list">
+<li>Hingga 4 jalur (2 masuk + 2 keluar)</li>
+<li>4× Raspberry Pi + 4× kamera ALPR</li>
+<li>2× layar exit</li>
+<li>Palang barrier baru (opsional +Rp 15jt)</li>
+<li>Dashboard multi-lokasi</li>
+<li>Priority support</li>
+<li>SLA 99.5% uptime</li>
+</ul>
+<a href="#kontak" class="btn-primary">Pilih Business</a>
+</div>
+
+<div class="price-card reveal reveal-d2">
+<div class="price-name">Enterprise</div>
+<div class="price-amount">Custom</div>
+<div class="price-desc">Untuk skala besar — mall besar, bandara, jaringan</div>
+<ul class="price-list">
+<li>Unlimited jalur</li>
+<li>Custom integration (ERP, BMS)</li>
+<li>SLA 99.9% uptime</li>
+<li>Dedicated support team</li>
+<li>On-site training</li>
+<li>Custom branding dashboard</li>
+</ul>
+<a href="#kontak" class="btn-secondary">Hubungi Kami</a>
+</div>
+
+</div>
+<p class="price-note reveal">Cicilan tersedia — semua paket bisa dicicil 6–12 bulan. <a href="#kontak" style="color:var(--amber)">Hubungi tim kami →</a></p>
+</div>
+</section>
+
+<!-- COVERAGE -->
+<section class="coverage" id="jangkauan">
+<div class="container">
+<div class="section-label reveal">Jangkauan</div>
+<h2 class="section-title reveal">Instalasi di<br>Seluruh Indonesia.</h2>
+<p class="section-sub reveal">Tim instalasi tersedia di 15+ kota. Area lain? Kami kirim tim atau partner lokal.</p>
+
+<div class="map-wrap reveal">
+<!-- Indonesia map - clearer shapes with colored city dots -->
+<svg class="map-svg" viewBox="0 0 800 300" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width:800px">
+<!-- Sumatra -->
+<path d="M80 80 L130 55 L170 70 L185 100 L175 140 L150 175 L120 190 L90 170 L65 130 L60 100 Z" fill="var(--surface-raised)" stroke="var(--border-default)" stroke-width="0.8"/>
+<!-- Java -->
+<path d="M230 195 L270 185 L320 182 L360 185 L395 192 L410 200 L395 210 L350 212 L300 210 L260 208 L235 205 Z" fill="var(--surface-raised)" stroke="var(--border-default)" stroke-width="0.8"/>
+<!-- Kalimantan -->
+<path d="M290 60 L330 45 L380 50 L405 70 L410 110 L395 140 L370 155 L340 150 L310 135 L285 110 L275 80 Z" fill="var(--surface-raised)" stroke="var(--border-default)" stroke-width="0.8"/>
+<!-- Sulawesi -->
+<path d="M440 65 L460 55 L475 70 L470 95 L480 110 L495 105 L500 120 L485 140 L465 160 L450 170 L445 145 L435 120 L430 95 L435 75 Z" fill="var(--surface-raised)" stroke="var(--border-default)" stroke-width="0.8"/>
+<!-- Bali -->
+<path d="M415 205 L425 200 L432 205 L428 212 L418 212 Z" fill="var(--surface-raised)" stroke="var(--border-default)" stroke-width="0.8"/>
+<!-- Nusa Tenggara -->
+<path d="M440 210 L460 205 L475 208 L490 212 L505 215 L520 210 L535 215 L528 222 L510 225 L485 222 L460 218 L442 218 Z" fill="var(--surface-raised)" stroke="var(--border-default)" stroke-width="0.8"/>
+<!-- Maluku -->
+<path d="M540 110 L555 100 L565 108 L560 125 L548 130 L538 120 Z" fill="var(--surface-raised)" stroke="var(--border-default)" stroke-width="0.8"/>
+<path d="M555 140 L570 135 L575 148 L565 155 L552 150 Z" fill="var(--surface-raised)" stroke="var(--border-default)" stroke-width="0.8"/>
+<!-- Papua -->
+<path d="M600 70 L660 50 L720 55 L750 75 L755 110 L740 145 L710 165 L670 170 L640 155 L620 130 L600 110 L590 85 Z" fill="var(--surface-raised)" stroke="var(--border-default)" stroke-width="0.8"/>
+
+<!-- Island labels -->
+<text x="120" y="135" fill="var(--text-tertiary)" font-size="9" font-family="var(--font-ui)" text-anchor="middle" opacity="0.5">SUMATRA</text>
+<text x="320" y="202" fill="var(--text-tertiary)" font-size="9" font-family="var(--font-ui)" text-anchor="middle" opacity="0.5">JAWA</text>
+<text x="345" y="98" fill="var(--text-tertiary)" font-size="9" font-family="var(--font-ui)" text-anchor="middle" opacity="0.5">KALIMANTAN</text>
+<text x="460" y="120" fill="var(--text-tertiary)" font-size="9" font-family="var(--font-ui)" text-anchor="middle" opacity="0.5">SULAWESI</text>
+<text x="680" y="115" fill="var(--text-tertiary)" font-size="9" font-family="var(--font-ui)" text-anchor="middle" opacity="0.5">PAPUA</text>
+
+<!-- City dots - each with unique color -->
+<!-- Medan - Cyan -->
+<circle cx="110" cy="82" r="5" fill="#06B6D4" opacity="0.9"><animate attributeName="r" values="4;6;4" dur="3s" repeatCount="indefinite"/></circle>
+<text x="110" y="74" fill="#06B6D4" font-size="8" font-family="var(--font-ui)" font-weight="600" text-anchor="middle">Medan</text>
+<!-- Jakarta - Amber (capital) -->
+<circle cx="253" cy="195" r="6" fill="#F5A623"><animate attributeName="r" values="5;7;5" dur="3s" repeatCount="indefinite" begin="0.2s"/></circle>
+<text x="248" y="188" fill="#F5A623" font-size="8" font-family="var(--font-ui)" font-weight="600" text-anchor="middle">Jakarta</text>
+<!-- Bandung - Green -->
+<circle cx="290" cy="195" r="4.5" fill="#22C55E"><animate attributeName="r" values="3.5;5.5;3.5" dur="3s" repeatCount="indefinite" begin="0.4s"/></circle>
+<text x="290" y="188" fill="#22C55E" font-size="8" font-family="var(--font-ui)" font-weight="600" text-anchor="middle">Bandung</text>
+<!-- Yogyakarta - Pink -->
+<circle cx="330" cy="198" r="4" fill="#EC4899"><animate attributeName="r" values="3;5;3" dur="3s" repeatCount="indefinite" begin="0.5s"/></circle>
+<text x="330" y="220" fill="#EC4899" font-size="8" font-family="var(--font-ui)" font-weight="600" text-anchor="middle">Yogya</text>
+<!-- Semarang - Purple -->
+<circle cx="340" cy="190" r="4" fill="#A855F7"><animate attributeName="r" values="3;5;3" dur="3s" repeatCount="indefinite" begin="0.6s"/></circle>
+<text x="352" y="183" fill="#A855F7" font-size="8" font-family="var(--font-ui)" font-weight="600" text-anchor="start">Semarang</text>
+<!-- Surabaya - Orange-Red -->
+<circle cx="385" cy="197" r="5" fill="#F97316"><animate attributeName="r" values="4;6;4" dur="3s" repeatCount="indefinite" begin="0.8s"/></circle>
+<text x="385" y="190" fill="#F97316" font-size="8" font-family="var(--font-ui)" font-weight="600" text-anchor="middle">Surabaya</text>
+<!-- Bali - Teal -->
+<circle cx="423" cy="207" r="4" fill="#14B8A6"><animate attributeName="r" values="3;5;3" dur="3s" repeatCount="indefinite" begin="1s"/></circle>
+<text x="423" y="228" fill="#14B8A6" font-size="8" font-family="var(--font-ui)" font-weight="600" text-anchor="middle">Bali</text>
+<!-- Makassar - Rose -->
+<circle cx="460" cy="155" r="4.5" fill="#FB7185"><animate attributeName="r" values="3.5;5.5;3.5" dur="3s" repeatCount="indefinite" begin="1.2s"/></circle>
+<text x="472" y="167" fill="#FB7185" font-size="8" font-family="var(--font-ui)" font-weight="600" text-anchor="start">Makassar</text>
+<!-- Balikpapan - Sky Blue -->
+<circle cx="365" cy="120" r="4" fill="#38BDF8"><animate attributeName="r" values="3;5;3" dur="3s" repeatCount="indefinite" begin="1.4s"/></circle>
+<text x="365" y="113" fill="#38BDF8" font-size="8" font-family="var(--font-ui)" font-weight="600" text-anchor="middle">Balikpapan</text>
+<!-- Jayapura - Lime -->
+<circle cx="730" cy="80" r="4" fill="#84CC16"><animate attributeName="r" values="3;5;3" dur="3s" repeatCount="indefinite" begin="1.6s"/></circle>
+<text x="730" y="72" fill="#84CC16" font-size="8" font-family="var(--font-ui)" font-weight="600" text-anchor="middle">Jayapura</text>
+<!-- Manado - Yellow -->
+<circle cx="475" cy="68" r="3.5" fill="#FACC15"><animate attributeName="r" values="2.5;4.5;2.5" dur="3s" repeatCount="indefinite" begin="1.8s"/></circle>
+<text x="475" y="60" fill="#FACC15" font-size="8" font-family="var(--font-ui)" font-weight="600" text-anchor="middle">Manado</text>
+<!-- Pontianak - Indigo -->
+<circle cx="300" cy="80" r="3.5" fill="#818CF8"><animate attributeName="r" values="2.5;4.5;2.5" dur="3s" repeatCount="indefinite" begin="2s"/></circle>
+<text x="300" y="72" fill="#818CF8" font-size="8" font-family="var(--font-ui)" font-weight="600" text-anchor="middle">Pontianak</text>
+</svg>
+<div class="city-dots">
+<span class="city-dot"><span class="cdot" style="background:#F5A623"></span>Jabodetabek</span>
+<span class="city-dot"><span class="cdot" style="background:#22C55E"></span>Bandung</span>
+<span class="city-dot"><span class="cdot" style="background:#F97316"></span>Surabaya</span>
+<span class="city-dot"><span class="cdot" style="background:#A855F7"></span>Semarang</span>
+<span class="city-dot"><span class="cdot" style="background:#EC4899"></span>Yogyakarta</span>
+<span class="city-dot"><span class="cdot" style="background:#06B6D4"></span>Medan</span>
+<span class="city-dot"><span class="cdot" style="background:#FB7185"></span>Makassar</span>
+<span class="city-dot"><span class="cdot" style="background:#14B8A6"></span>Bali</span>
+<span class="city-dot"><span class="cdot" style="background:#38BDF8"></span>Balikpapan</span>
+<span class="city-dot"><span class="cdot" style="background:#818CF8"></span>Pontianak</span>
+<span class="city-dot"><span class="cdot" style="background:#84CC16"></span>Jayapura</span>
+<span class="city-dot"><span class="cdot" style="background:#FACC15"></span>Manado</span>
+</div>
+<p class="coverage-cta">Tersedia di <strong style="color:var(--amber)">seluruh Indonesia</strong> — dari Sabang sampai Merauke. Instalasi hanya 1–3 hari. Kami kirim tim ke lokasi Anda.</p>
+</div>
+</div>
+</section>
+
+<!-- HARDWARE -->
+<section class="hardware" id="hardware">
+<div class="container">
+<div class="section-label reveal">Hardware</div>
+<h2 class="section-title reveal">Fleksibel.<br>Tanpa Vendor Lock-in.</h2>
+
+<div class="hw-grid">
+<div class="hw-card reveal">
+<div class="hw-badge">Opsi A</div>
+<h3>Kit Baru dari SupaPark</h3>
+<p>Paket lengkap plug-and-play. Tinggal pasang, konfigurasi via wizard, dan langsung jalan.</p>
+<ul class="hw-list">
+<li>Raspberry Pi 4/5 + casing outdoor</li>
+<li>Kamera ALPR 2MP IR (mobil + motor)</li>
+<li>Layar touchscreen 10" untuk exit</li>
+<li>Sensor IR dual-height</li>
+<li>Semua kabel + konektor</li>
+<li>SD card pre-loaded SupaPark OS</li>
+</ul>
+</div>
+<div class="hw-card reveal reveal-d1">
+<div class="hw-badge">Opsi B</div>
+<h3>Gunakan Hardware Existing</h3>
+<p>Sudah punya palang dan kamera? Kami integrasikan dengan sistem SupaPark. Hemat hingga 40%.</p>
+<ul class="hw-list">
+<li>Palang CAME / Nice / ZKTeco — kompatibel</li>
+<li>Kamera IP 2MP+ dengan RTSP</li>
+<li>Koneksi LAN atau WiFi</li>
+<li>Relay dry-contact untuk kontrol palang</li>
+<li>Tim kami survey & pastikan kompatibilitas</li>
+<li>Garansi integrasi atau uang kembali</li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testi" id="testimoni">
+<div class="container">
+<div class="section-label reveal">Testimoni</div>
+<h2 class="section-title reveal">Kata Mereka yang<br>Sudah Berubah.</h2>
+
+<div class="testi-grid">
+<div class="testi-card reveal">
+<div class="testi-stars">★★★★★</div>
+<div class="testi-quote">"Dulu kami pakai 4 operator parkir per hari. Sekarang nol. Pendapatan justru naik 25% karena tidak ada kebocoran cash lagi. ROI balik dalam 4 bulan."</div>
+<div class="testi-author">Budi Santoso</div>
+<div class="testi-role">Pengelola Apartemen, Jakarta Selatan</div>
+</div>
+<div class="testi-card reveal reveal-d1">
+<div class="testi-stars">★★★★★</div>
+<div class="testi-quote">"Yang paling saya suka: sistem tetap jalan saat internet mati. Di Surabaya, koneksi sering drop. Dengan SupaPark, penghuni tidak pernah komplain antrian lagi."</div>
+<div class="testi-author">Ratna Wijaya</div>
+<div class="testi-role">Pemilik Ruko & Kos, Surabaya</div>
+</div>
+<div class="testi-card reveal reveal-d2">
+<div class="testi-stars">★★★★★</div>
+<div class="testi-quote">"Instalasi selesai 2 hari. Dashboard real-time sangat membantu — saya bisa monitor dari HP berapa pendapatan hari ini, tanpa harus ke lokasi."</div>
+<div class="testi-author">dr. Anisa Rahma</div>
+<div class="testi-role">Direktur Operasional RS, Bandung</div>
+</div>
+<div class="testi-card reveal reveal-d3">
+<div class="testi-stars">★★★★★</div>
+<div class="testi-quote">"Kami developer 5 proyek properti. SupaPark jadi standar di semua proyek baru kami. Harga 1/5 dari vendor lama, tapi fitur justru lebih lengkap."</div>
+<div class="testi-author">Made Arjuna</div>
+<div class="testi-role">Developer Properti, Bali</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq">
+<div class="container">
+<div class="section-label reveal">FAQ</div>
+<h2 class="section-title reveal">Pertanyaan<br>yang Sering Ditanyakan.</h2>
+
+<div class="faq-list">
+<div class="faq-item reveal">
+<button class="faq-q" onclick="toggleFaq(this)">Apakah perlu internet 24 jam?</button>
+<div class="faq-a"><p>Tidak. SupaPark didesain offline-first. Sistem tetap beroperasi penuh saat internet mati — ALPR, kontrol palang, dan kalkulasi tarif semuanya berjalan lokal. Data disinkronisasi otomatis saat koneksi kembali.</p></div>
+</div>
+<div class="faq-item reveal">
+<button class="faq-q" onclick="toggleFaq(this)">Bagaimana jika plat tidak terbaca?</button>
+<div class="faq-a"><p>Sistem mengambil foto dan menampilkan di layar untuk konfirmasi manual. Jika tetap gagal, driver bisa input plat via keyboard touchscreen. Operator juga bisa verifikasi remote via dashboard.</p></div>
+</div>
+<div class="faq-item reveal">
+<button class="faq-q" onclick="toggleFaq(this)">Apakah aman dari kecurangan?</button>
+<div class="faq-a"><p>Setiap transaksi tercatat lengkap: foto ALPR, waktu masuk/keluar, metode pembayaran, dan referensi. Tidak ada transaksi cash yang bisa dimanipulasi. Dashboard menampilkan semua data secara transparan.</p></div>
+</div>
+<div class="faq-item reveal">
+<button class="faq-q" onclick="toggleFaq(this)">Bisa custom tarif?</button>
+<div class="faq-a"><p>Ya. Tarif bisa dikonfigurasi per tipe kendaraan: grace period, per jam, progressive, cap harian, tarif malam, dan member gratis. Semua diatur dari dashboard, langsung ter-push ke edge device.</p></div>
+</div>
+<div class="faq-item reveal">
+<button class="faq-q" onclick="toggleFaq(this)">Apa bedanya dengan manless parking lain?</button>
+<div class="faq-a"><p>SupaPark benar-benar tanpa operator — termasuk saat offline. Sistem lain tetap butuh operator saat internet down atau ada masalah. Kami juga satu-satunya yang support hardware existing tanpa vendor lock-in.</p></div>
+</div>
+<div class="faq-item reveal">
+<button class="faq-q" onclick="toggleFaq(this)">Bagaimana pembayaran non-QRIS?</button>
+<div class="faq-a"><p>Saat ini kami mendukung semua e-wallet via QRIS. Fase berikutnya: integrasi NFC e-money (Flazz, Brizzi, TapCash), virtual account, dan postpaid billing untuk member korporat.</p></div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- LEGAL -->
+<section class="legal" id="legal">
+<div class="container">
+<div class="section-label reveal">Kepatuhan & Privasi</div>
+<h2 class="section-title reveal" style="font-size:clamp(24px,3vw,32px)">Transparan & Sesuai Regulasi.</h2>
+
+<div class="legal-grid">
+<div class="legal-card reveal">
+<h3><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Kepatuhan Regulasi</h3>
+<ul>
+<li>Sesuai UU No. 27/2022 tentang Perlindungan Data Pribadi (UU PDP)</li>
+<li>Pembayaran QRIS melalui payment gateway berizin BI (Peraturan BI No. 23/6/PBI/2021)</li>
+<li>Pendaftaran PSE sesuai PP 71/2019</li>
+<li>Sesuai standar SNI parkir (SNI 03-7065-2005)</li>
+</ul>
+</div>
+<div class="legal-card reveal reveal-d1">
+<h3><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Privasi Data</h3>
+<ul>
+<li>Data plat hanya untuk identifikasi sesi parkir</li>
+<li>Nomor telepon opsional, hanya untuk notifikasi</li>
+<li>Tidak ada penjualan data ke pihak ketiga</li>
+<li>Pengguna dapat hapus data kapan saja via PWA</li>
+<li>Data disimpan di server Indonesia</li>
+</ul>
+</div>
+<div class="legal-card reveal reveal-d2">
+<h3><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Ketentuan</h3>
+<ul>
+<li>SupaPark = penyedia teknologi, bukan pengelola parkir</li>
+<li>Tarif ditentukan oleh pengelola lokasi</li>
+<li>Harga bersifat estimasi, dapat berubah sesuai kondisi</li>
+<li>Foto ALPR disimpan maks 30 hari</li>
+<li>Fitur offline menggunakan kalkulasi tarif lokal</li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+
+<!-- CTA / CONTACT -->
+<section class="cta-section" id="kontak">
+<div class="container">
+<div class="cta-inner">
+<div class="section-label reveal" style="justify-content:center">Hubungi Kami</div>
+<h2 class="section-title reveal" style="text-align:center">Siap Revolusi<br>Parkir Anda?</h2>
+<p class="section-sub reveal" style="text-align:center;margin:0 auto 8px">Isi form di bawah atau langsung WhatsApp tim kami. Konsultasi gratis, tanpa komitmen.</p>
+
+<form class="cta-form reveal" action="mailto:info@supapark.id" method="POST" enctype="text/plain">
+<div>
+<label>Nama Lengkap</label>
+<input type="text" name="nama" placeholder="Nama Anda" required>
+</div>
+<div>
+<label>No. HP / WhatsApp</label>
+<input type="tel" name="telepon" placeholder="08xx-xxxx-xxxx" required>
+</div>
+<div>
+<label>Lokasi / Kota</label>
+<input type="text" name="lokasi" placeholder="Jakarta, Surabaya, dll">
+</div>
+<div>
+<label>Jumlah Jalur</label>
+<select name="jalur">
+<option value="">Pilih...</option>
+<option value="2">2 jalur (1 masuk + 1 keluar)</option>
+<option value="4">4 jalur (2 masuk + 2 keluar)</option>
+<option value="6+">6+ jalur</option>
+<option value="belum-tahu">Belum tahu</option>
+</select>
+</div>
+<div class="full">
+<label>Pesan (Opsional)</label>
+<textarea name="pesan" placeholder="Ceritakan kebutuhan parkir Anda..."></textarea>
+</div>
+<button type="submit" class="btn-primary">Kirim Permintaan →</button>
+</form>
+
+<div class="cta-wa reveal">
+Atau langsung WhatsApp: <a href="https://wa.me/6281947181000" target="_blank">0819-4718-1000</a>
+</div>
+</div>
+</div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+<div class="footer-inner">
+<div class="footer-top">
+<div class="footer-brand">
+<a href="#" class="nav-logo">
+<svg viewBox="0 0 48 48" fill="none" width="32" height="32"><rect x="10" y="8" width="10" height="32" rx="3" fill="#F5A623"/><path d="M20 8h10a10 10 0 0 1 0 20H20" stroke="#F5A623" stroke-width="8" stroke-linecap="round" fill="none"/></svg>
+<span style="font-weight:700;font-size:16px;letter-spacing:0.15em">SUPAPARK</span>
+</a>
+<p>Parkir Pintar, Tanpa Ribet. Sistem parkir berbasis AI buatan Indonesia untuk menggantikan infrastruktur parkir konvensional.</p>
+</div>
+<div class="footer-col">
+<h4>Produk</h4>
+<a href="#solusi">Fitur</a>
+<a href="#cara-kerja">Teknologi</a>
+<a href="#harga">Harga</a>
+<a href="#hardware">Hardware</a>
+</div>
+<div class="footer-col">
+<h4>Perusahaan</h4>
+<a href="#">Tentang Kami</a>
+<a href="#testimoni">Testimoni</a>
+<a href="#">Karir</a>
+<a href="#">Blog</a>
+</div>
+<div class="footer-col">
+<h4>Legal</h4>
+<a href="#">Kebijakan Privasi</a>
+<a href="#">Syarat & Ketentuan</a>
+<a href="#legal">Kepatuhan</a>
+<a href="#kontak">Kontak</a>
+</div>
+</div>
+<div class="footer-bottom">
+<p>© 2026 SupaPark. Hak cipta dilindungi undang-undang.</p>
+<p>Dibuat dengan bangga di Indonesia 🇮🇩</p>
+</div>
+</div>
+</footer>
+
+<script>
+// Hamburger menu
+const hamburger=document.getElementById('hamburger');
+const mobileMenu=document.getElementById('mobileMenu');
+hamburger.addEventListener('click',()=>{hamburger.classList.toggle('active');mobileMenu.classList.toggle('active')});
+function closeMenu(){hamburger.classList.remove('active');mobileMenu.classList.remove('active')}
+
+// Scroll reveal
+const observer=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');observer.unobserve(e.target)}})},{threshold:0.1,rootMargin:'0px 0px -40px 0px'});
+document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
+
+// Flow tabs
+function showFlow(id){
+document.querySelectorAll('.flow-tab').forEach(t=>t.classList.remove('active'));
+document.querySelectorAll('.flow-content').forEach(c=>c.classList.remove('active'));
+document.getElementById('flow-'+id).classList.add('active');
+event.target.classList.add('active');
+// Re-observe reveals in the newly shown content
+document.querySelectorAll('#flow-'+id+' .reveal:not(.visible)').forEach(el=>observer.observe(el));
+}
+
+// FAQ
+function toggleFaq(btn){
+const item=btn.parentElement;
+const wasOpen=item.classList.contains('open');
+// Close all
+document.querySelectorAll('.faq-item').forEach(i=>i.classList.remove('open'));
+if(!wasOpen)item.classList.add('open');
+}
+
+// Nav active section highlight
+const sections=document.querySelectorAll('section[id]');
+const navLinks=document.querySelectorAll('.nav-links a:not(.nav-cta)');
+window.addEventListener('scroll',()=>{
+let current='';
+sections.forEach(s=>{
+const top=s.offsetTop-100;
+if(pageYOffset>=top)current=s.getAttribute('id');
+});
+navLinks.forEach(a=>{
+a.style.color=a.getAttribute('href')==='#'+current?'var(--text-primary)':'';
+});
+},{passive:true});
+</script>
+</body>
+</html>
